@@ -1,0 +1,14 @@
+{
+  "name": "pw-internship-elearning-backend",
+  "version": "1.0.0",
+  "description": "skillshare",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "mohd shaoib",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.20.0"
+  }
+}
