@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import mongoose, { Schema } from 'mongoose';
 
 const userSchema = new Schema(
@@ -93,11 +94,23 @@ const userSchema = new Schema(
     forgotPasswordTokenExpiry: Date,
     emailChangeToken: String,
     emailChangeTokenExpiry: Date,
-    userStatusToken: String,
-    userStatusTokenExpiry: Date
+    emailVerificationToken: String,
+    emailVerificationTokenExpiry: Date
   },
   { timestamps: true }
 );
+userSchema.methods = {
+  generateEmailVerificationToken: function () {
+    const emailVerificationToken = crypto.randomBytes(20).toString('hex');
 
+    this.emailVerificationToken = crypto
+      .createHash('sha256')
+      .update(StatusToken)
+      .digest('hex');
+
+    this.emailVerificationTokenExpiry = Date.now() + 15 * 60 * 1000;
+    return emailVerificationToken;
+  }
+};
 const User = mongoose.model('User', userSchema);
 export default User;
