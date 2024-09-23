@@ -1,5 +1,9 @@
+import bcrypt from 'bcrypt';
 import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
 import mongoose, { Schema } from 'mongoose';
+
+import envVar from '../config/config.js';
 
 const userSchema = new Schema(
   {
@@ -29,7 +33,11 @@ const userSchema = new Schema(
       minlength: [8, 'password should be atleast 8 characters'],
       maxlenght: [20, 'password should be atmost 20 characters'],
       trim: true,
-      select: false
+      select: false,
+      RegExp: [
+        /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/,
+        'Password must contain at least one uppercase letter, one lowercase letter, one number and one special character'
+      ]
     },
     role: {
       type: String,
@@ -99,17 +107,48 @@ const userSchema = new Schema(
   },
   { timestamps: true }
 );
+
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) {
+    return next();
+  }
+  this.password = await bcrypt.hash(this.password, 12); // 12 saltrounds(a random value) that determines the cost factor
+  next();
+});
 userSchema.methods = {
   generateEmailVerificationToken: function () {
-    const emailVerificationToken = crypto.randomBytes(20).toString('hex');
+    const verificationToken = crypto.randomBytes(20).toString('hex'); // crypto for secure communication
 
     this.emailVerificationToken = crypto
       .createHash('sha256')
-      .update(StatusToken)
+      .update(verificationToken)
       .digest('hex');
 
     this.emailVerificationTokenExpiry = Date.now() + 15 * 60 * 1000;
-    return emailVerificationToken;
+    return verificationToken;
+  },
+  generateAuthToken: function () {
+    const accessToken = jwt.sign(
+      {
+        _id: this._id,
+        role: this.role,
+        email: this.email
+      },
+      envVar.accessTokenSecret,
+      {
+        expiresIn: '1d'
+      }
+    );
+    const refreshToken = jwt.sign(
+      {
+        _id: this._id
+      },
+      envVar.refreshTokenSecret,
+      {
+        expiresIn: '15m'
+      }
+    );
+    return { accessToken, refreshToken };
   }
 };
 const User = mongoose.model('User', userSchema);
