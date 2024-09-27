@@ -1,19 +1,16 @@
 import fs from 'fs';
 
-const errorMiddleware = (error, req, res, __next) => {
+const errorMiddleware = (err, req, res, _next) => {
   if (req.file?.path) {
     fs.unlinkSync(req.file.path);
   }
+  err.statusCode = err.statusCode || 500;
+  err.message = err.message || 'Error middleware issue';
 
-  error.statusCode = error.statusCode || 500;
-  error.message = error.message || 'Error middleware issue';
-
-  res.status(error.statusCode).json({
-    status: 'error',
+  res.status(err.statusCode).json({
     success: false,
-    statusCode: error.statusCode,
-    message: error.message,
-    stack: error.stack
+    message: err.message,
+    stack: err.stack
   });
 };
 

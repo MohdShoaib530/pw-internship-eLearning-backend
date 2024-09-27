@@ -3,9 +3,8 @@ import cors from 'cors';
 import express from 'express';
 import morgan from 'morgan';
 
-import envVar from './config/config.js';
+import envVar from './configs/config.js';
 import errorMiddleware from './middleware/error.middleware.js';
-
 const app = express();
 
 // built in middleware
@@ -14,11 +13,10 @@ app.use(
     limit: '16kb'
   })
 );
-
 app.use(
   express.urlencoded({
-    limit: '16kb',
-    extended: true
+    extended: true,
+    limit: '16kb'
   })
 );
 
@@ -35,25 +33,29 @@ app.use(
 app.use(morgan('dev'));
 app.use(cookieParser());
 
-app.get('/check', (req, res) => {
-  res.status(200).json({
-    status: 'success',
-    message: 'Server is running'
-  });
+app.get('/time', async (_req, res) => {
+  res.status(200).json('Running very fastly');
 });
 
-//  import routes
+// import routers
+import courseRouter from './routes/course.routes.js';
+import miscellaneousRouter from './routes/miscellaneous.routes.js';
+import paymentRouter from './routes/payment.routes.js';
 import userRouter from './routes/user.routes.js';
 
-//  use routes
 app.use('/api/v1/user', userRouter);
+app.use('/api/v1/courses', courseRouter);
+app.use('/api/v1/payment', paymentRouter);
+app.use('/api/v1/', miscellaneousRouter);
 
 // default catch for all the other routes
-app.use('*', (req, res) => {
-  res.status(404).send('404,page Not Found');
+
+app.use('*', async (_req, res) => {
+  res.status(404).json('404 page not found');
 });
 
 // custom error handeling middleware
+
 app.use(errorMiddleware);
 
 export default app;

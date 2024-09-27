@@ -1,4 +1,4 @@
-const envVar = {
+const config = {
   port: String(process.env.PORT),
   nodeEnv: String(process.env.NODE_ENV),
   accessTokenSecret: String(process.env.ACCESS_TOKEN_SECRET),
@@ -20,4 +20,4 @@ const envVar = {
   smtpFromEmail: String(process.env.SMTP_FROM_EMAIL)
 };
 
-export default envVar;
+export default config;

@@ -1,4 +1,4 @@
-# Learnyst-server
+# pw-internship-eLearning
 
 This repository contains the server-side application for the Learning Management System (skillsmaster) built using Node.js, express and MongoDB.
 

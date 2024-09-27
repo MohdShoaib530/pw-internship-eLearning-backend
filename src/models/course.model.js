@@ -1,56 +1,62 @@
-import mongoose, { Schema } from 'mongoose';
+import mongoose, { model, Schema } from 'mongoose';
+import mongooseAggregatePaginate from 'mongoose-aggregate-paginate-v2';
 
 const courseSchema = new Schema(
   {
     title: {
       type: String,
-      required: true,
+      required: [true, 'Title is required'],
+      minlength: [8, 'Title must be atleast 8 characters'],
+      maxlength: [50, 'Title cannot be more than 50 characters'],
       trim: true
     },
     description: {
       type: String,
-      required: true,
-      trim: true
+      required: [true, 'Description is required'],
+      minlength: [20, 'Description must be atleast 20 characters long']
     },
     category: {
       type: String,
-      required: true
+      required: [true, 'Category is required']
     },
-    thumbanil: {
+    lectures: [
+      {
+        title: String,
+        description: String,
+        lecture: {
+          public_id: {
+            type: String,
+            required: true
+          },
+          secure_url: {
+            type: String,
+            required: true
+          }
+        }
+      }
+    ],
+    thumbnail: {
       public_id: {
-        type: String,
-        required: true
+        type: String
       },
       secure_url: {
-        type: String,
-        required: true
+        type: String
       }
     },
-    price: {
+    numberOfLectures: {
       type: Number,
-      default: 9.99
-    },
-    duration: {
-      type: String,
-      required: true
+      default: 0
     },
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: 'User'
-    },
-    toolsMastery: {
-      type: String,
-      required: true
-    },
-    mentors: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: 'User'
-      }
-    ]
+    }
   },
-  { timestamps: true }
+  {
+    timestamps: true
+  }
 );
+mongoose.plugin(mongooseAggregatePaginate);
+const Course = model('Course', courseSchema);
 
-const Course = mongoose.model('Course', courseSchema);
 export default Course;
