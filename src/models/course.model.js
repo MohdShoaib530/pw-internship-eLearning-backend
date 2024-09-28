@@ -5,56 +5,52 @@ const courseSchema = new Schema(
   {
     title: {
       type: String,
-      required: [true, 'Title is required'],
-      minlength: [8, 'Title must be atleast 8 characters'],
-      maxlength: [50, 'Title cannot be more than 50 characters'],
+      required: true,
       trim: true
     },
     description: {
       type: String,
-      required: [true, 'Description is required'],
-      minlength: [20, 'Description must be atleast 20 characters long']
+      required: true,
+      trim: true
     },
     category: {
       type: String,
-      required: [true, 'Category is required']
+      required: true
     },
-    lectures: [
-      {
-        title: String,
-        description: String,
-        lecture: {
-          public_id: {
-            type: String,
-            required: true
-          },
-          secure_url: {
-            type: String,
-            required: true
-          }
-        }
-      }
-    ],
-    thumbnail: {
+    thumbanil: {
       public_id: {
-        type: String
+        type: String,
+        required: true
       },
       secure_url: {
-        type: String
+        type: String,
+        required: true
       }
     },
-    numberOfLectures: {
+    price: {
       type: Number,
-      default: 0
+      default: 9.99
+    },
+    duration: {
+      type: String,
+      required: true
     },
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: 'User'
-    }
+    },
+    toolsMastery: {
+      type: String,
+      required: true
+    },
+    mentors: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'User'
+      }
+    ]
   },
-  {
-    timestamps: true
-  }
+  { timestamps: true }
 );
 mongoose.plugin(mongooseAggregatePaginate);
 const Course = model('Course', courseSchema);
