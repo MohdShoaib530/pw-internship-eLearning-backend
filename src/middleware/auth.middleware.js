@@ -35,10 +35,9 @@ export const isLoggedIn = asyncHandler(async (req, _, next) => {
   }
 });
 
-export const authorizeRoles = ([...roles]) =>
+export const authorizeRoles = (role) =>
   asyncHandler(async (req, _res, next) => {
-    console.log('object', roles);
-    if (!roles.includes(req.user?.role)) {
+    if (!role.includes(req.user?.role)) {
       throw next(
         new apiError('You do not have permission to view this route', 403)
       );
@@ -49,10 +48,7 @@ export const authorizeRoles = ([...roles]) =>
 
 export const authorizeSubscribers = asyncHandler(async (req, _res, next) => {
   const user = await User.findById(req.user._id);
-  if (
-    user.role !== ('ADMIN' || 'TEACHER') &&
-    user.subscription.status !== 'active'
-  ) {
+  if (user.role !== 'admin' && user.subscription.status !== 'active') {
     throw next(new apiError('Please subscribe to access this route.', 403));
   }
   next();

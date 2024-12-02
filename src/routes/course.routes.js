@@ -23,13 +23,13 @@ router
   .get(getAllCourses)
   .post(
     isLoggedIn,
-    authorizeRoles(['ADMIN']),
+    authorizeRoles(['admin']),
     upload.single('thumbnail'),
     createCourse
   )
   .delete(
     isLoggedIn,
-    authorizeRoles(['ADMIN', 'TEACHER']),
+    authorizeRoles(['admin', 'mentor']),
     removeLectureFromCourse
   );
 
@@ -38,16 +38,16 @@ router
   .get(isLoggedIn, authorizeSubscribers, getLecturesByCourseId)
   .post(
     isLoggedIn,
-    authorizeRoles(['ADMIN', 'TEACHER']),
+    authorizeRoles(['admin']),
     upload.single('lecture'),
     addLectureToCourseById
   )
   .patch(
     isLoggedIn,
-    authorizeRoles(['ADMIN', 'TEACHER']),
+    authorizeRoles(['admin']),
     upload.single('thumbnail'),
     updateCourseById
   )
-  .delete(isLoggedIn, authorizeRoles(['ADMIN']), deleteCourseById);
+  .delete(isLoggedIn, authorizeRoles(['admin']), deleteCourseById);
 
 export default router;

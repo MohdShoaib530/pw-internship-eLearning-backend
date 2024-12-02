@@ -21,6 +21,6 @@ router
   .route('/unsubscribe')
   .post(isLoggedIn, authorizeSubscribers, cancelSubscription);
 router.route('/razorpay-key').get(isLoggedIn, getRazorpayApiKey);
-router.route('/').get(isLoggedIn, authorizeRoles('ADMIN'), allPayments);
+router.route('/').get(isLoggedIn, authorizeRoles('admin'), allPayments);
 
 export default router;

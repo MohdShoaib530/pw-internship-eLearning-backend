@@ -46,7 +46,7 @@ import userRouter from './routes/user.routes.js';
 app.use('/api/v1/user', userRouter);
 app.use('/api/v1/courses', courseRouter);
 app.use('/api/v1/payment', paymentRouter);
-app.use('/api/v1/', miscellaneousRouter);
+app.use('/api/v1', miscellaneousRouter);
 
 // default catch for all the other routes
 

@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
+import { Schema } from 'mongoose';
 
 import envVar from '../configs/config.js';
 
@@ -56,21 +57,18 @@ const userSchema = new Schema(
         }
       }
     ],
-    subscriptions: [
-      {
-        subscriptionId: String,
-        status: {
-          type: String,
-          enum: ['active', 'inactive'],
-          default: 'inactive'
-        },
-        subscribedOn: {
-          type: Date,
-          default: Date.now()
-        }
+    subscriptions: {
+      subscriptionId: String,
+      status: {
+        type: String,
+        default: 'inactive'
+      },
+      subscribedOn: {
+        type: Date,
+        default: Date.now()
       }
-    ],
-    EmailVerificationstatus: {
+    },
+    emailVerificationstatus: {
       type: String,
       enum: ['active', 'inactive'],
       default: 'inactive'
@@ -180,12 +178,12 @@ userSchema.methods = {
   generateUserStatusToken: function () {
     const StatusToken = crypto.randomBytes(20).toString('hex');
 
-    this.userStatusToken = crypto
+    this.emailVerificationToken = crypto
       .createHash('sha256')
       .update(StatusToken)
       .digest('hex');
 
-    this.userStatusTokenExpiry = Date.now() + 15 * 60 * 1000;
+    this.emailVerificationTokenExpiry = Date.now() + 15 * 60 * 1000;
     return StatusToken;
   }
 };
