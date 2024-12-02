@@ -42,7 +42,7 @@ export const userStats = asyncHandler(async (req, res, next) => {
   const allUsersCount = await User.countDocuments();
 
   const subscribedUsersCount = await User.countDocuments({
-    'subscription.status': 'active'
+    'subscriptions.status': 'active'
   });
 
   res.status(200).json(

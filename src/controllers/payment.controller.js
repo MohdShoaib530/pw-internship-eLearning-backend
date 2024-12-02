@@ -45,26 +45,33 @@ export const buySubscription = asyncHandler(async (req, res, next) => {
       return next(new apiError('Unauthorized, please login', 401));
     }
 
-    if (user.role === ('ADMIN' || 'TEACHER')) {
+    if (user.role === 'admin' || user.role === 'teacher') {
       return next(
         new apiError('Admin and Teachers cannot purchase a subscription', 400)
       );
     }
 
-    const subscription = await razorpay.subscriptions.create({
+    const subscriptionCreated = await razorpay.subscriptions.create({
       plan_id: envVar.razorpayPlanId,
       customer_notify: 1,
       total_count: 12
     });
 
-    user.subscription.id = subscription.id;
-    user.subscription.status = subscription.status;
+    console.log('subscription', subscriptionCreated);
 
+    user.subscriptions.subscriptionId = subscriptionCreated.id;
+    user.subscriptions.status = subscriptionCreated.status;
+
+    console.log('user', user);
+
+    // save user
     await user.save();
 
     res
       .status(200)
-      .json(new apiResponse(200, subscription.id, 'subscribed successfully'));
+      .json(
+        new apiResponse(200, subscriptionCreated.id, 'subscribed successfully')
+      );
   } catch (error) {
     if (error.name === 'RazorpayError') {
       return next(new apiError(`Razorpay error: ${error.description}`, 500));
@@ -85,13 +92,12 @@ export const verifySubscription = asyncHandler(async (req, res, next) => {
   const { id } = req.user;
   const { razorpay_payment_id, razorpay_subscription_id, razorpay_signature } =
     req.body;
-
   const user = await User.findById(id);
 
-  const subscriptionId = user.subscription.id;
+  const subscriptionId = user.subscriptions.subscriptionId;
 
   const generatedSignature = crypto
-    .createHmac('sha256', process.env.RAZORPAY_SECRET)
+    .createHmac('sha256', envVar.razorpaySecret)
     .update(`${razorpay_payment_id}|${subscriptionId}`)
     .digest('hex');
 
@@ -105,7 +111,7 @@ export const verifySubscription = asyncHandler(async (req, res, next) => {
     razorpay_signature
   });
 
-  user.subscription.status = 'active';
+  user.subscriptions.status = 'active';
   await user.save();
 
   res

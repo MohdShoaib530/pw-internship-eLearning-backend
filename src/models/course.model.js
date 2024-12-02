@@ -15,9 +15,30 @@ const courseSchema = new Schema(
     },
     category: {
       type: String,
-      required: true
+      required: true,
+      trim: true
     },
-    thumbanil: {
+    lectures: [
+      {
+        title: String,
+        description: String,
+        lecture: {
+          public_id: {
+            type: String,
+            required: true
+          },
+          secure_url: {
+            type: String,
+            required: true
+          }
+        }
+      }
+    ],
+    numberOfLectures: {
+      type: Number,
+      default: 0
+    },
+    thumbnail: {
       public_id: {
         type: String,
         required: true
@@ -28,7 +49,7 @@ const courseSchema = new Schema(
       }
     },
     price: {
-      type: Number,
+      type: String,
       default: 9.99
     },
     duration: {
@@ -39,16 +60,10 @@ const courseSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: 'User'
     },
-    toolsMastery: {
+    mentor: {
       type: String,
       required: true
-    },
-    mentors: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: 'User'
-      }
-    ]
+    }
   },
   { timestamps: true }
 );

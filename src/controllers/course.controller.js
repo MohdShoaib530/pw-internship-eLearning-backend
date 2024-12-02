@@ -13,7 +13,7 @@ import cloudinaryUpload from '../utils/cloudinaryUpload.js';
  */
 export const getAllCourses = asyncHandler(async (_req, res, next) => {
   // Find all the courses without lectures
-  const courses = await Course.find({}).select('-lectures');
+  const courses = await Course.find({});
   console.log('courses', courses);
   if (!courses) {
     throw next(new apiError('courses not found'));
@@ -30,9 +30,9 @@ export const getAllCourses = asyncHandler(async (_req, res, next) => {
  * @ACCESS Private (admin and teachers only)
  */
 export const createCourse = asyncHandler(async (req, res, next) => {
-  const { title, description, category } = req.body;
+  const { title, description, category, price, duration } = req.body;
 
-  if (!title || !description || !category) {
+  if (!title || !description || !category || !price || !duration) {
     return next(new apiError('All fields are required', 400));
   }
 
@@ -45,9 +45,11 @@ export const createCourse = asyncHandler(async (req, res, next) => {
       secure_url:
         'https://res.cloudinary.com/du9jzqlpt/image/upload/v1674647316/avatar_drzgxv.jpg'
     },
-    createdBy: req.user?._id
+    createdBy: req.user?._id,
+    price: price,
+    duration: duration || '4 weeks',
+    mentor: req.user?.fullName
   });
-  console.log('course', course);
 
   if (!course) {
     return next(
@@ -91,21 +93,20 @@ export const createCourse = asyncHandler(async (req, res, next) => {
  */
 export const removeLectureFromCourse = asyncHandler(async (req, res, next) => {
   // Grabbing the courseId and lectureId from req.query
-  const { courseId, lectureId } = req.query;
-
-  console.log('courseId', courseId, lectureId);
+  const { courseIds, lectureIds } = req.query;
+  console.log('req.body hi', courseIds, lectureIds);
 
   // Checking if both courseId and lectureId are present
-  if (!courseId) {
+  if (!courseIds) {
     return next(new apiError('Course ID is required', 400));
   }
 
-  if (!lectureId) {
+  if (!lectureIds) {
     return next(new apiError('Lecture ID is required', 400));
   }
 
   // Find the course uding the courseId
-  const course = await Course.findById(courseId).select('+lectures');
+  const course = await Course.findById(courseIds).select('+lectures');
   console.log('course', course);
 
   // If no course send custom message
@@ -115,7 +116,7 @@ export const removeLectureFromCourse = asyncHandler(async (req, res, next) => {
 
   // Find the index of the lecture using the lectureId
   const lectureIndex = course.lectures.findIndex(
-    (lecture) => lecture._id.toString() === lectureId.toString()
+    (lecture) => lecture._id.toString() === lectureIds.toString()
   );
 
   // If returned index is -1 then send error as mentioned below
@@ -154,7 +155,8 @@ export const removeLectureFromCourse = asyncHandler(async (req, res, next) => {
 export const getLecturesByCourseId = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
 
-  const course = await Course.findById(id).select('+lectures');
+  const course = await Course.findById(id);
+  console.log('course', course);
 
   if (!course) {
     return next(new apiError('Invalid course id or course not found.', 404));
@@ -193,7 +195,14 @@ export const addLectureToCourseById = asyncHandler(async (req, res, next) => {
       lectureLocalPath = req.file;
     }
     console.log('lectureLocalPath', lectureLocalPath);
-    const lectureUploadCloudinary = await cloudinaryUpload(lectureLocalPath);
+    const lectureUploadCloudinary = await cloudinary.v2.uploader.upload(
+      req.file.path,
+      {
+        folder: 'pw', // Save files in a folder named lms
+        chunk_size: 50000000, // 50 mb size
+        resource_type: 'video'
+      }
+    );
 
     if (lectureUploadCloudinary) {
       lectureData.public_id = lectureUploadCloudinary.public_id;
@@ -231,7 +240,7 @@ export const updateCourseById = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
   const { title, description, category } = req.body;
 
-  const course = await Course.findById(id).select('-lectures');
+  const course = await Course.findById(id);
   console.log('course', course);
   if (!course) {
     return next(new apiError('Invalid course id or course not found.', 400));

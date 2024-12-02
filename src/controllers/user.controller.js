@@ -22,10 +22,10 @@ const cookieOptions = {
  * @ACCESS registered user
  */
 export const registerUser = asyncHandler(async (req, res, next) => {
-  const { fullName, email, password } = req.body;
-  console.log('userdetails', email, password);
+  const { fullName, email, password, role } = req.body;
+  console.log('role', role);
 
-  if ([fullName, email, password].some((field) => field?.trim() === '')) {
+  if ([fullName, email, password, role].some((field) => field?.trim() === '')) {
     throw next(new apiError(400, 'All fields are required'));
   }
   const userExists = await User.findOne({ email });
@@ -48,6 +48,7 @@ export const registerUser = asyncHandler(async (req, res, next) => {
       secure_url:
         'https://res.cloudinary.com/du9jzqlpt/image/upload/v1674647316/avatar_drzgxv.jpg'
     },
+    role: role ? role : 'user',
     refreshToken: ''
   });
 
@@ -57,12 +58,13 @@ export const registerUser = asyncHandler(async (req, res, next) => {
       new apiError('User registration failed, please try again later')
     );
   }
+
   try {
     const StatusToken = await user.generateUserStatusToken();
     console.log('StatusToken', StatusToken);
     await user.save();
-    user.userStatusToken = undefined;
-    user.userStatusTokenExpiry = undefined;
+    user.emailVerificationToken = undefined;
+    user.emailVerificationTokenExpiry = undefined;
 
     const statusTokendUrl = `${envVar.frontendUrl}/confirm-status/${StatusToken}`;
     const subject = 'Confirm User Status';
@@ -103,14 +105,14 @@ export const confirmUserStatus = asyncHandler(async (req, res, next) => {
   if (!confirmToken) {
     throw next(new apiError('confirmToken is required required', 400));
   }
-  const userStatusToken = crypto
+  const emailVerificationToken = crypto
     .createHash('sha256')
     .update(confirmToken)
     .digest('hex');
 
   const user = await User.findOne({
-    userStatusToken,
-    userStatusTokenExpiry: { $gt: Date.now() }
+    emailVerificationToken,
+    emailVerificationTokenExpiry: { $gt: Date.now() }
   });
 
   if (!user) {
@@ -118,9 +120,9 @@ export const confirmUserStatus = asyncHandler(async (req, res, next) => {
       new apiError('Token is invalid or expired, please try again', 401)
     );
   }
-  user.status = true;
-  user.userStatusToken = undefined;
-  user.userStatusTokenExpiry = undefined;
+  user.emailVerificationstatus = 'active';
+  user.emailVerificationToken = undefined;
+  user.emailVerificationTokenExpiry = undefined;
   await user.save();
 
   res
@@ -135,6 +137,7 @@ export const confirmUserStatus = asyncHandler(async (req, res, next) => {
  */
 export const getUserStatusToken = asyncHandler(async (req, res, next) => {
   const { email } = req.body;
+  console.log('emial', email);
 
   if (!email) {
     throw next(new apiError('email is required', 400));
@@ -145,12 +148,18 @@ export const getUserStatusToken = asyncHandler(async (req, res, next) => {
     return next(new apiError('Email is not registered', 400));
   }
 
+  const userStatus = await user.emailVerificationstatus;
+  console.log('userStatus', userStatus);
+  if (userStatus === 'active') {
+    return next(new apiError('Email is already verified', 400));
+  }
+
   try {
     const StatusToken = await user.generateUserStatusToken();
     console.log('StatusToken', StatusToken);
     await user.save();
-    user.userStatusToken = undefined;
-    user.userStatusTokenExpiry = undefined;
+    user.emailVerificationToken = undefined;
+    user.emailVerificationTokenExpiry = undefined;
 
     const statusTokendUrl = `${envVar.frontendUrl}/confirm-status/${StatusToken}`;
     const subject = 'Confirm User Status';
@@ -207,6 +216,11 @@ export const loginUser = asyncHandler(async (req, res, next) => {
   if (!user) {
     throw next(new apiError('OOPS! User does not exists', 404));
   }
+  const userStatus = await user.emailVerificationstatus;
+  console.log('userStatus', userStatus);
+  if (userStatus === 'inactive') {
+    throw next(new apiError('Email is not verified', 401));
+  }
 
   const isPasswordValid = await user.comparePassword(password);
   if (!isPasswordValid) {
@@ -259,8 +273,7 @@ export const logoutUser = asyncHandler(async (req, res, next) => {
 export const refreshAccessToken = asyncHandler(async (req, res, next) => {
   try {
     const incomingRefreshToken =
-      req.cookie?.refreshToken || req.body?.refreshToken;
-
+      req.cookies?.refreshToken || req.body?.refreshToken;
     if (!incomingRefreshToken) {
       throw next(new apiError('unable to get the refreshToken', 401));
     }
@@ -269,7 +282,6 @@ export const refreshAccessToken = asyncHandler(async (req, res, next) => {
       incomingRefreshToken,
       envVar.refreshTokenSecret
     );
-
     if (!decodedRefreshToken) {
       throw next(new apiError('Invalid refreshToken', 401));
     }
