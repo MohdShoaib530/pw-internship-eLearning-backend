@@ -166,7 +166,7 @@ export const getUserStatusToken = asyncHandler(async (req, res, next) => {
     const statusTokendUrl = `${envVar.frontendUrl}/confirm-status/${StatusToken}`;
     const subject = 'Confirm User Status';
 
-    const message = `You can confirm user status by clicking <a href=${statusTokendUrl} target="_blank">Reset your password</a>\nIf the above link does not work for some reason then copy paste this link in new tab ${statusTokendUrl}`;
+    const message = `You can confirm user status by clicking <a href=${statusTokendUrl} target="_blank">confirm-email</a>\nIf the above link does not work for some reason then copy paste this link in new tab ${statusTokendUrl}`;
 
     const emailSend = await sendEmail(email, subject, message);
 
