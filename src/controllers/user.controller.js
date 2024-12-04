@@ -12,8 +12,10 @@ import generateTokens from '../utils/generateTokens.js';
 import sendEmail from '../utils/sendEmail.js';
 
 const cookieOptions = {
-  secure: envVar.nodeEnv === 'Production' ? true : false,
-  httpOnly: true
+  secure: envVar.nodeEnv === 'production' ? true : false,
+  maxAge: 24 * 60 * 60 * 1000, // 7 days
+  httpOnly: true,
+  sameSite: 'None'
 };
 
 /**
